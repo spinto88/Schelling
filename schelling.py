@@ -4,6 +4,14 @@ import warnings
 
 class SchellingModel(nx.Graph):
 
+    """ Schelling model. Arguments:
+	l = linear size of the grid.
+	fraction_pos, fraction_neg = fraction of positive and negative nodes.
+	threshold = threshold of the Schelling model. If an node's utility is lower 
+			than this threshold, the node is unsatisfied.
+	neighborhood = 'nearest' or 'moore'.
+    """
+
     def __init__(self, l, fraction_pos, fraction_neg, threshold, neighborhood = 'nearest'):
 
         self.l = l
@@ -13,6 +21,7 @@ class SchellingModel(nx.Graph):
             warnings.warn('The fraction of empty sites must be greater than 0')
             exit()
 
+        # Topology equal to a grid with nearest neighbors or Moore neighborhood 
         nx.Graph.__init__(self)
         nx.grid_2d_graph(l, l, periodic = True, create_using = self)
         if neighborhood == 'nearest':
@@ -34,6 +43,8 @@ class SchellingModel(nx.Graph):
 
     def number_of_states(self):
 
+        """ Return a dictionary with the number of positive, negative, and empty sites """
+
         pos_nodes = len([node for node in self.nodes if self.node[node]['state'] == 1])
         neg_nodes = len([node for node in self.nodes if self.node[node]['state'] == -1])
         free_nodes = len([node for node in self.nodes if self.node[node]['state'] == 0])
@@ -42,26 +53,27 @@ class SchellingModel(nx.Graph):
 
     def utility(self, node):
 
+        """ Utility function for node: it is the fraction of nearest sites in the same state than node """
+
         same_state = [1 if self.node[neighbour]['state'] == self.node[node]['state'] else 0 for neighbour in self.neighbors(node)]
-
-        return np.float(np.sum(same_state)) / self.degree(node)
-
-    def potential_utility(self, node, potential_state):
-
-        same_state = [1 if self.node[neighbour]['state'] == potential_state else 0 for neighbour in self.neighbors(node)]
 
         return np.float(np.sum(same_state)) / self.degree(node)
 
     def mean_utility(self):
 
+        """ Mean utility of the system """
+
         return np.mean([self.utility(node) for node in self.occupied_nodes])
 
     def unsatisfied_nodes(self):
             
+        """ Number of unsatisfied nodes, whose utility is lower than the system threshold """
         unsatisfied_nodes = [node for node in self.occupied_nodes if self.utility(node) < self.threshold]
         return len(unsatisfied_nodes)
 
     def surface_length(self):
+
+        """ Surface defined as the number of pairs of neighbors with different state """
 
         surface = 0
         for node in self.nodes():
@@ -73,35 +85,34 @@ class SchellingModel(nx.Graph):
 
     def evolve(self):
 
+        """ An evolution step: it tries to move all the unsatisfied nodes, return the number of changes made """
         changes = 0
-            
-#        np.random.shuffle(self.occupied_nodes)
+        
+	# List of unsatisfied nodes 
         unsatisfied_nodes = [node for node in self.occupied_nodes if self.utility(node) < self.threshold]
-        np.random.shuffle(unsatisfied_nodes)
-
-        """
-        unsatisfied_nodes = []
-        for node in self.occupied_nodes:
-            if self.utility(node) < self.threshold:
-                 unsatisfied_nodes.append(node)
-                 if len(unsatisfied_nodes) >= 100:
-                     break
-        """
-        if len(unsatisfied_nodes) == 0:
+        
+	# If there is no unsatisfied nodes there is nothing to do 
+	if len(unsatisfied_nodes) == 0:
             print 'There is no unsatisfied nodes'
             return None
 
+        # Go over all unsatisfied nodes in a random way (by shuffling the list)    
+	np.random.shuffle(unsatisfied_nodes)
         for random_unsatisfied_node in unsatisfied_nodes:
 
+            # Check if the node is still an unsatisfied one
             if self.utility(random_unsatisfied_node) < self.threshold:
 
+                # Take a random free site
                 random_free_node = self.free_nodes[np.random.choice(range(len(self.free_nodes)))]
  
+                # Ocupy the free site
                 self.node[random_free_node]['state'] = self.node[random_unsatisfied_node]['state']
 
                 self.occupied_nodes.remove(random_unsatisfied_node)
                 self.occupied_nodes.append(random_free_node)
 
+                # Free the ocuppied one
     	        self.node[random_unsatisfied_node]['state'] = 0
 
                 self.free_nodes.remove(random_free_node)
@@ -113,12 +124,16 @@ class SchellingModel(nx.Graph):
 
         return changes
 
-    def unsatisfied_nodes(self):
-            
-        unsatisfied_nodes = [node for node in self.occupied_nodes if self.utility(node) < self.threshold]
-        return len(unsatisfied_nodes)
-
     def image(self, fig, file2save = None):
+
+        """ Image of the configuration: the fig argument is a matplotlib.pyplot figure.
+	In the main file call: 
+	import matplotlib.pyplot as plt
+
+	fig = plt.figure()
+	self.image(fig = fig)
+
+	With plt.ion() ... plt.ioff() the image is displayed in an interactive way."""
 
         import matplotlib.pyplot as plt
 
