@@ -46,81 +46,106 @@ class SchellingModel(nx.Graph):
 
         return np.float(np.sum(same_state)) / self.degree(node)
 
-    def mean_utility(self):
-
-        return np.mean([self.utility(node) for node in self.occupied_nodes])
-
     def potential_utility(self, node, potential_state):
 
         same_state = [1 if self.node[neighbour]['state'] == potential_state else 0 for neighbour in self.neighbors(node)]
 
         return np.float(np.sum(same_state)) / self.degree(node)
 
-    def evolve(self, steps):
+    def mean_utility(self):
 
-        accepted_steps = 0
-
-        for step in range(steps):
-
-            unsatisfied_nodes = [node for node in self.occupied_nodes if self.utility(node) < self.threshold]
-            if len(unsatisfied_nodes) == 0:
-                break
-
-            random_unsatisfied_node = unsatisfied_nodes[np.random.choice(len(unsatisfied_nodes))]
-
-   	    potential_free_nodes = [node for node in self.free_nodes \
-			if self.potential_utility(node, self.node[random_unsatisfied_node]['state']) >= self.threshold]
-
-            if len(potential_free_nodes) != 0:
-
-                random_free_node = potential_free_nodes[np.random.choice(len(potential_free_nodes))]
-  
-	        self.node[random_free_node]['state'] = self.node[random_unsatisfied_node]['state']
-
-                self.occupied_nodes.remove(random_unsatisfied_node)
-                self.occupied_nodes.append(random_free_node)
-
-    	        self.node[random_unsatisfied_node]['state'] = 0
-
-                self.free_nodes.remove(random_free_node)
-                self.free_nodes.append(random_unsatisfied_node)
-
-                accepted_steps += 1
-
-        return accepted_steps
-
-    def evol2convergence(self, max_step = 100):
-
-        steps = 0
-        unsatisfied_nodes = [node for node in self.occupied_nodes if self.utility(node) < self.threshold]
-        while len(unsatisfied_nodes) != 0 and steps < max_step:
-            self.evolve(1000)
-            unsatisfied_nodes = [node for node in self.occupied_nodes if self.utility(node) < self.threshold]
-            steps += 1
-
-        return steps*1000
+        return np.mean([self.utility(node) for node in self.occupied_nodes])
 
     def unsatisfied_nodes(self):
             
         unsatisfied_nodes = [node for node in self.occupied_nodes if self.utility(node) < self.threshold]
-        return unsatisfied_nodes
+        return len(unsatisfied_nodes)
 
-    def image(self, file2save = None):
+    def surface_length(self):
+
+        surface = 0
+        for node in self.nodes():
+            for neighbour in self.neighbors(node):
+                if self.node[node]['state'] != self.node[neighbour]['state']:
+                    surface += 1
+
+        return int(surface * 0.5)
+
+    def evolve(self):
+
+        accepted_steps = 0
+            
+        np.random.shuffle(self.occupied_nodes)
+        unsatisfied_nodes = []
+        for node in self.occupied_nodes:
+            if self.utility(node) < self.threshold:
+                 unsatisfied_nodes.append(node)
+                 if len(unsatisfied_nodes) >= 100:
+                     break
+
+        if len(unsatisfied_nodes) == 0:
+            print 'There is no unsatisfied nodes'
+            return None
+
+        for random_unsatisfied_node in unsatisfied_nodes:
+
+            if self.utility(random_unsatisfied_node) < self.threshold:
+
+                np.random.shuffle(self.free_nodes)
+                random_free_node = None
+                for node in self.free_nodes:
+                    if self.potential_utility(node, self.node[random_unsatisfied_node]['state']) \
+			>= self.threshold:
+                        random_free_node = node
+                        break
+
+                if random_free_node != None:
+ 
+  	            self.node[random_free_node]['state'] = self.node[random_unsatisfied_node]['state']
+
+                    self.occupied_nodes.remove(random_unsatisfied_node)
+                    self.occupied_nodes.append(random_free_node)
+
+    	            self.node[random_unsatisfied_node]['state'] = 0
+
+                    self.free_nodes.remove(random_free_node)
+                    self.free_nodes.append(random_unsatisfied_node)
+
+                    accepted_steps += 1
+                else:
+                    pass
+            else:
+                pass
+
+        return accepted_steps
+
+    def unsatisfied_nodes(self):
+            
+        unsatisfied_nodes = [node for node in self.occupied_nodes if self.utility(node) < self.threshold]
+        return len(unsatisfied_nodes)
+
+    def image(self, fig, file2save = None):
 
         import matplotlib.pyplot as plt
-        plt.figure(figsize = (13,13))
 
-        color_dict = {-1: (0.90, 0.00, 0.00, 0.75), 1: (0.00, 0.00, 0.90, 0.75), 0: (0.50, 0.90, 0.50, 0.25)}
+        color_dict = {-1: (0.90, 0.00, 0.00, 0.75), 1: (0.00, 0.00, 0.90, 0.75), 0: (0.30, 0.90, 0.30, 0.30)}
 
         matrix2show = np.zeros([self.l, self.l, 4])
 
         for node in self.nodes:
            matrix2show[node] = color_dict[self.node[node]['state']]
 
-        plt.imshow(matrix2show)
-        plt.xticks([])
-        plt.yticks([])
-        plt.grid(True)
+        fig.clf()
+        ax = fig.add_subplot(1,1,1)
+        ax.imshow(matrix2show)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title('Unsatisfied nodes {} - Surface {}'.format(self.unsatisfied_nodes(), \
+								self.surface_length()))
+        fig.canvas.draw()
+
         if file2save is not None:
-            plt.savefig(file2save, dpi = 300)
-        plt.show()
+            fig.set_size_inches(13, 13)
+            fig.savefig(file2save, dpi = 300)
+        else:
+            plt.show()
