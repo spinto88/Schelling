@@ -73,16 +73,20 @@ class SchellingModel(nx.Graph):
 
     def evolve(self):
 
-        accepted_steps = 0
+        changes = 0
             
-        np.random.shuffle(self.occupied_nodes)
+#        np.random.shuffle(self.occupied_nodes)
+        unsatisfied_nodes = [node for node in self.occupied_nodes if self.utility(node) < self.threshold]
+        np.random.shuffle(unsatisfied_nodes)
+
+        """
         unsatisfied_nodes = []
         for node in self.occupied_nodes:
             if self.utility(node) < self.threshold:
                  unsatisfied_nodes.append(node)
                  if len(unsatisfied_nodes) >= 100:
                      break
-
+        """
         if len(unsatisfied_nodes) == 0:
             print 'There is no unsatisfied nodes'
             return None
@@ -91,33 +95,23 @@ class SchellingModel(nx.Graph):
 
             if self.utility(random_unsatisfied_node) < self.threshold:
 
-                np.random.shuffle(self.free_nodes)
-                random_free_node = None
-                for node in self.free_nodes:
-                    if self.potential_utility(node, self.node[random_unsatisfied_node]['state']) \
-			>= self.threshold:
-                        random_free_node = node
-                        break
-
-                if random_free_node != None:
+                random_free_node = self.free_nodes[np.random.choice(range(len(self.free_nodes)))]
  
-  	            self.node[random_free_node]['state'] = self.node[random_unsatisfied_node]['state']
+                self.node[random_free_node]['state'] = self.node[random_unsatisfied_node]['state']
 
-                    self.occupied_nodes.remove(random_unsatisfied_node)
-                    self.occupied_nodes.append(random_free_node)
+                self.occupied_nodes.remove(random_unsatisfied_node)
+                self.occupied_nodes.append(random_free_node)
 
-    	            self.node[random_unsatisfied_node]['state'] = 0
+    	        self.node[random_unsatisfied_node]['state'] = 0
 
-                    self.free_nodes.remove(random_free_node)
-                    self.free_nodes.append(random_unsatisfied_node)
+                self.free_nodes.remove(random_free_node)
+                self.free_nodes.append(random_unsatisfied_node)
 
-                    accepted_steps += 1
-                else:
-                    pass
+                changes += 1
             else:
                 pass
 
-        return accepted_steps
+        return changes
 
     def unsatisfied_nodes(self):
             

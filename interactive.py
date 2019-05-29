@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 np.random.seed(123457)
 
-model = SchellingModel(l = 50, fraction_pos = 0.10, fraction_neg = 0.10, threshold = 4.00/8, neighborhood = 'moore')
+model = SchellingModel(l = 50, fraction_pos = 0.20, fraction_neg = 0.00, threshold = 4.00/8, neighborhood = 'moore')
 
 fig = plt.figure()
 
@@ -13,7 +13,7 @@ fig = plt.figure()
 plt.ion()
 
 model.image(fig)
-for i in range(40):
+for i in range(100):
     model.evolve()
     model.image(fig)
     print 'Iteration number {}'.format(i)
