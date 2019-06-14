@@ -15,9 +15,7 @@ neighborhood = 'moore' # Moore's neighborhood: each node has eight neighbors
 number_of_iterations = 100 # Evolution steps 
 
 # Create the model
-model = SchellingModel(l = l, fraction_pos = fraction_pos, \
-		fraction_neg = fraction_neg, threshold = threshold, \
-		neighborhood = neighborhood)
+model = SchellingModel(l = l, fraction_pos = fraction_pos, fraction_neg = fraction_neg, threshold = threshold, neighborhood = neighborhood)
 
 # See how many states are in the system
 print model.number_of_states()
@@ -31,14 +29,12 @@ model.image(fig)
 
 # Do 20 iterations, while showing the system
 for step in range(number_of_iterations):
-    model.evolve()
-    model.image(fig)
+	model.evolve()
+	model.image(fig)
 
-    # Compute in each the mean utility, the number of unsatisfied nodes and the surface length
-    print 'Step: {} - Mean utility: {} - Unsatisfied: {} - Surface: {}'.format(step, \
-									model.mean_utility(), \
-									model.unsatisfied_nodes(), \
-									model.surface_length())
+	# Compute in each the mean utility, the number of unsatisfied nodes and the surface length
+	print 'Step: {} - Mean utility: {} - Unsatisfied: {} - Surface: {}'.format(step, model.mean_utility(), model.unsatisfied_nodes(), model.surface_length())
+
 # Deactivate interactive matplotlib mode
 plt.ioff()
 
