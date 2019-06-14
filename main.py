@@ -6,10 +6,10 @@ import numpy as np
 np.random.seed(123458)
 
 # Schelling parameters
-l = 100 # Linear size of the grid
+l = 32 # Linear size of the grid
 fraction_pos = 0.35 # Fraction of positive and negative nodes
 fraction_neg = 0.35
-threshold = 0.5 # Schelling's threshold
+threshold = 0.85 # Schelling's threshold
 neighborhood = 'moore' # Moore's neighborhood: each node has eight neighbors
 
 number_of_iterations = 100 # Evolution steps 
