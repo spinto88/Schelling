@@ -147,11 +147,11 @@ class SchellingModel(nx.Graph):
 		ax.imshow(matrix2show)
 		ax.set_xticks([])
 		ax.set_yticks([])
-		ax.set_title('Unsatisfied nodes {} - Surface {}'.format(self.unsatisfied_nodes(), self.surface_length()))
+		ax.set_title('Threshold {} - Unsatisfied nodes {}'.format(self.threshold, self.unsatisfied_nodes()), size = 5)
 		fig.canvas.draw()
 
 		if file2save is not None:
-			fig.set_size_inches(13, 13)
+			fig.set_size_inches(2,2)
 			fig.savefig(file2save, dpi = 300)
 		else:
 			plt.show()
